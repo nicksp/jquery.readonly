@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.3
+Version: 0.0.4
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -52,10 +52,10 @@ Version: 0.0.3
                     $el.find(options.eventBlockSelector).andSelf().unbind(options.eventTypes.toString().replace(new RegExp(',', 'g'), ' '), $.fn.readonly._eventBlocker);
                     $el.find(options.disableSelector).andSelf().each(function() {
                         var $el = $(this);
-                        $el.removeAttr('disabled');
-                        var href = $el.attr('hrefbak');
+                        $el.prop('disabled', false);
+                        var href = $el.prop('hrefbak');
                         if (href) {
-                            $el.removeAttr('hrefbak').attr('href', href);
+                            $el.removeProp('hrefbak').prop('href', href);
                         }
                     });
                     if (options.grayout) {
@@ -77,10 +77,10 @@ Version: 0.0.3
 
                     $elmain.find(options.disableSelector).andSelf().each(function() {
                         var $el = $(this);
-                        $el.attr('disabled', 'disabled');
-                        var hrefbak = $el.attr('href');
+                        $el.prop('disabled', true);
+                        var hrefbak = $el.prop('href');
                         if (hrefbak) {
-                            $el.removeAttr('href').attr('hrefbak', hrefbak);
+                            $el.prop('href', '').prop('hrefbak', hrefbak);
                         }
                     });
 
@@ -88,10 +88,9 @@ Version: 0.0.3
                         var $el = $(this);
 
                         //remove the onclick and put ir in jquery.click
-                        var onclick = $el.attr('onclick');
-
+                        var onclick = $el.prop('onclick');
                         if (onclick) {
-                            $el.removeAttr('onclick');
+                            $el.prop('onclick', '');
                             var onclickStr = onclick.toString().replace(new RegExp('postback.?=.?true;', 'g'), '').replace(new RegExp('[\n\r]*', 'g'), '');
                             if (onclickStr != 'functiononclick(){}' && onclickStr != 'functiononclick(event){}') {
                                 $el.bind('click', onclick);
