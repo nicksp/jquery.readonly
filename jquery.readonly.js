@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.4
+Version: 0.0.5
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -26,21 +26,9 @@ Version: 0.0.4
     $.fn.extend($.fn.readonly, {
         defaults: {
             eventTypes: ['blur', 'focus', 'focusin', 'focusout', 'load', 'resize', 'scroll', 'unload', 'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave', 'change', 'select', 'submit', 'keydown', 'keypress', 'keyup', 'error'],
-            grayout: true,
+            grayout: false,
             eventBlockSelector: '*', //defines the element(s) to block the eventTypes on
-            disableSelector: "input[type!='submit'], select, a", //defines the element(s) to disable
-            usePrerenderedImages: false, //should be used in combination of prepare
-            prerenderSuffix: '_bw'
-        },
-        prepare: function(options) {
-            var options = $.extend({}, $.fn.readonly.defaults, options);
-            if (options.grayout) {
-                return this.each(function() {
-                    $.fn.readonly.grayscale.options.usePrerenderedImages = options.usePrerenderedImages;
-                    $.fn.readonly.grayscale.options.prerenderSuffix = options.prerenderSuffix;
-                    $.fn.readonly.grayscale.prepare(this);
-                });
-            }
+            disableSelector: ":input, select, a" //defines the element(s) to disable
         },
         reset: function(options) {
             var options = $.extend({}, $.fn.readonly.defaults, options);
@@ -59,8 +47,6 @@ Version: 0.0.4
                         }
                     });
                     if (options.grayout) {
-                        $.fn.readonly.grayscale.options.usePrerenderedImages = options.usePrerenderedImages;
-                        $.fn.readonly.grayscale.options.prerenderSuffix = options.prerenderSuffix;
                         $.fn.readonly.grayscale.reset(this);
                     }
                 }
@@ -80,7 +66,7 @@ Version: 0.0.4
                         $el.prop('disabled', true);
                         var hrefbak = $el.prop('href');
                         if (hrefbak) {
-                            $el.prop('href', '').prop('hrefbak', hrefbak);
+                            $el.prop('href', '').prop('hrefbak', hrefbak).removeAttr('href');
                         }
                     });
 
@@ -115,8 +101,6 @@ Version: 0.0.4
                         }
                     });
                     if (options.grayout) {
-                        $.fn.readonly.grayscale.options.usePrerenderedImages = options.usePrerenderedImages;
-                        $.fn.readonly.grayscale.options.prerenderSuffix = options.prerenderSuffix;
                         $.fn.readonly.grayscale(this);
                     }
                 }
@@ -165,141 +149,101 @@ Version: 0.0.4
                         }
                     }
                 }
-            },
-            //        log = function() {
-            //            try { window.console.log.apply(console, arguments); }
-            //            catch (e) { };
-            //        },
-        isExternal = function(url) {
-            // Checks whether URL is external: 'CanvasContext.getImageData'
-            // only works if the image is on the current domain.
-            return (new RegExp('https?://(?!' + window.location.hostname + ')')).test(url.toLowerCase());
-        },
-        data = (function() {
+            }
 
-            var cache = [0],
+            var data = (function() {
+
+                var cache = [0],
             expando = 'data' + (+new Date()),
             urlcacheMapping = new Object();
 
-            return function(elem) {
-                var cacheIndex;
-                var nextCacheIndex = cache.length;
+                return function(elem) {
+                    var cacheIndex;
+                    var nextCacheIndex = cache.length;
 
-                if (typeof elem == 'string') { //url
-                    var url = elem.toLowerCase();
-                    if (!urlcacheMapping[url]) {
-                        urlcacheMapping[url] = nextCacheIndex;
-                        cache[nextCacheIndex] = {};
+                    if (typeof elem == 'string') { //url
+                        var url = elem.toLowerCase();
+                        if (!urlcacheMapping[url]) {
+                            urlcacheMapping[url] = nextCacheIndex;
+                            cache[nextCacheIndex] = {};
+                        }
+                        cacheIndex = urlcacheMapping[url];
                     }
-                    cacheIndex = urlcacheMapping[url];
-                }
-                else { //element
-                    cacheIndex = elem[expando];
-                    if (!cacheIndex) {
-                        cacheIndex = elem[expando] = nextCacheIndex;
-                        cache[cacheIndex] = {};
+                    else { //element
+                        cacheIndex = elem[expando];
+                        if (!cacheIndex) {
+                            cacheIndex = elem[expando] = nextCacheIndex;
+                            cache[cacheIndex] = {};
+                        }
                     }
-                }
-                return cache[cacheIndex];
-            };
+                    return cache[cacheIndex];
+                };
 
-        })(),
-        desatIMG = function(img, prepare, realEl) {
-            // realEl is only set when img is temp (for BG images)
+            })();
 
-            var canvas = document.createElement('canvas'),
+            function isExternal(url) {
+                // Checks whether URL is external: 'CanvasContext.getImageData'
+                // only works if the image is on the current domain.
+                return (new RegExp('https?://(?!' + window.location.hostname + ')')).test(url.toLowerCase());
+            }
+            function desatIMG(img, prepare, realEl) {
+                // realEl is only set when img is temp (for BG images)
+                var canvas = document.createElement('canvas'),
                 context = canvas.getContext('2d'),
                 height = img.naturalHeight || img.offsetHeight || img.height,
                 width = img.naturalWidth || img.offsetWidth || img.width,
                 imgData;
 
-            canvas.height = height;
-            canvas.width = width;
-            context.drawImage(img, 0, 0);
-            try {
-                imgData = context.getImageData(0, 0, width, height);
-            } catch (e) { }
+                canvas.height = height;
+                canvas.width = width;
+                context.drawImage(img, 0, 0);
+                try {
+                    imgData = context.getImageData(0, 0, width, height);
+                } catch (e) { }
 
-            if (prepare) {
-                desatIMG.preparing = true;
-                // Slowly recurse through pixels for prep,
-                // :: only occurs on grayscale.prepare()
-                var y = 0;
-                (function() {
-
-                    if (!desatIMG.preparing) { return; }
-
-                    if (y === height) {
-                        // Finished!
-                        context.putImageData(imgData, 0, 0, 0, 0, width, height);
-
-                        var url = img.getAttribute('src');
-                        data(url).dataURL = canvas.toDataURL();
-                        realEl ? (data(realEl).BGdataURL = canvas.toDataURL())
-                               : (data(img).dataURL = canvas.toDataURL())
-                    }
-
+                for (var y = 0; y < height; y++) {
                     for (var x = 0; x < width; x++) {
                         var i = (y * width + x) * 4;
-                        // Apply Monochrome level across all channels:
+                        // Apply Monoschrome level across all channels:
                         imgData.data[i] = imgData.data[i + 1] = imgData.data[i + 2] =
-                        RGBtoGRAYSCALE(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]);
-                    }
-
-                    y++;
-                    setTimeout(arguments.callee, 0);
-
-                })();
-                return;
-            } else {
-                // If desatIMG was called without 'prepare' flag
-                // then cancel recursion and proceed with force! (below)
-                desatIMG.preparing = false;
-            }
-
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
-                    var i = (y * width + x) * 4;
-                    // Apply Monoschrome level across all channels:
-                    imgData.data[i] = imgData.data[i + 1] = imgData.data[i + 2] =
                     RGBtoGRAYSCALE(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]);
+                    }
                 }
-            }
 
-            context.putImageData(imgData, 0, 0, 0, 0, width, height);
+                context.putImageData(imgData, 0, 0, 0, 0, width, height);
 
-            var url = img.getAttribute('src');
-            data(url).dataURL = canvas.toDataURL();
-            realEl ? (data(realEl).BGdataURL = canvas.toDataURL())
+                var url = img.getAttribute('src');
+                data(url).dataURL = canvas.toDataURL();
+                realEl ? (data(realEl).BGdataURL = canvas.toDataURL())
                                : (data(img).dataURL = canvas.toDataURL())
 
-            return canvas;
-        },
-        getStyle = function(el, prop) {
-            var style = document.defaultView && document.defaultView.getComputedStyle ?
+                return canvas;
+            }
+            function getStyle(el, prop) {
+                var style = document.defaultView && document.defaultView.getComputedStyle ?
                         document.defaultView.getComputedStyle(el, null)[prop]
                         : el.currentStyle[prop];
-            // If format is #FFFFFF: (convert to RGB)
-            if (style && /^#[A-F0-9]/i.test(style)) {
-                var hex = style.match(/[A-F0-9]{2}/ig);
-                style = 'rgb(' + parseInt(hex[0], 16) + ','
+                // If format is #FFFFFF: (convert to RGB)
+                if (style && /^#[A-F0-9]/i.test(style)) {
+                    var hex = style.match(/[A-F0-9]{2}/ig);
+                    style = 'rgb(' + parseInt(hex[0], 16) + ','
                                    + parseInt(hex[1], 16) + ','
                                    + parseInt(hex[2], 16) + ')';
+                }
+                return style;
             }
-            return style;
-        },
-        RGBtoGRAYSCALE = function(r, g, b) {
-            // Returns single monochrome figure:
-            return parseInt((0.2125 * r) + (0.7154 * g) + (0.0721 * b), 10);
-        },
-        getAllNodes = function(context) {
-            var all = Array.prototype.slice.call(context.getElementsByTagName('*'));
-            all.unshift(context);
-            return all;
-        },
-        ToBWUrl = function(url, suffix) {
-            return url.replace(".", suffix + ".");
-        };
+            function RGBtoGRAYSCALE(r, g, b) {
+                // Returns single monochrome figure:
+                return parseInt((0.2125 * r) + (0.7154 * g) + (0.0721 * b), 10);
+            }
+            function getAllNodes(context) {
+                var all = Array.prototype.slice.call(context.getElementsByTagName('*'));
+                all.unshift(context);
+                return all;
+            }
+            function ToBWUrl(url, suffix) {
+                return url.replace(".", suffix + ".");
+            }
 
             var init = function(context) {
 
@@ -316,19 +260,20 @@ Version: 0.0.4
 
                 if (!document.createElement('canvas').getContext) {
                     context.style.filter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=1)';
+                    context.style.msFilter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=1)';
                     context.style.zoom = 1;
 
                     //apply to all jqgrid - jqGrid FIX for IE - RH
                     $(context).find('.ui-jqgrid').each(function() {
                         this.style.filter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=1)';
+                        this.style.msFilter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=1)';
                         this.style.zoom = 1;
                     });
 
                     return;
                 }
 
-                var all = getAllNodes(context),
-            i = -1, len = all.length;
+                var all = getAllNodes(context), i = -1, len = all.length;
 
                 while (++i < len) {
                     var cur = all[i];
@@ -393,24 +338,25 @@ Version: 0.0.4
                 // Handle if a DOM collection is passed instead of a single el:
                 if (context && context[0] && context.length && context[0].nodeName && context[0].nodeName.toLowerCase() != "option") {
                     // Is a DOM collection:
-                    var allContexts = Array.prototype.slice.call(context),
-                cIndex = -1, cLen = allContexts.length;
+                    var allContexts = Array.prototype.slice.call(context), cIndex = -1, cLen = allContexts.length;
                     while (++cIndex < cLen) { init.reset.call(this, allContexts[cIndex]); }
                     return;
                 }
                 context = context || document.documentElement;
                 if (!document.createElement('canvas').getContext) {
                     context.style.filter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=0)';
+                    context.style.msFilter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=0)';
+                    context.style.zoom = 'normal';
 
                     //apply to all jqgrid - jqGrid FIX for IE - RH
                     $(context).find('.ui-jqgrid').each(function() {
                         this.style.filter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=0)';
+                        this.style.msFilter = 'progid:DXImageTransform.Microsoft.BasicImage(grayscale=0)';
                         this.style.zoom = 'normal';
                     });
                     return;
                 }
-                var all = getAllNodes(context),
-            i = -1, len = all.length;
+                var all = getAllNodes(context), i = -1, len = all.length;
                 while (++i < len) {
                     var cur = all[i];
                     if (cur.nodeName.toLowerCase() === 'img') {
@@ -429,93 +375,6 @@ Version: 0.0.4
                         }
                     }
                 }
-            };
-
-            init.prepare = function(context) {
-
-                // Handle if a DOM collection is passed instead of a single el:
-                if (context && context[0] && context.length && context[0].nodeName) {
-                    // Is a DOM collection:
-                    var allContexts = Array.prototype.slice.call(context),
-                cIndex = -1, cLen = allContexts.length;
-                    while (++cIndex < cLen) { init.prepare.call(null, allContexts[cIndex]); }
-                    return;
-                }
-
-                // Slowly recurses through all elements
-                // so as not to lock up on the user.
-
-                context = context || document.documentElement;
-
-                if (!document.createElement('canvas').getContext) { return; }
-
-                var all = getAllNodes(context), i = -1, len = all.length;
-
-                while (++i < len) {
-                    var cur = all[i];
-                    if (data(cur).skip) { return; }
-                    if (cur.nodeName.toLowerCase() === 'img') {
-                        if (cur.getAttribute('src') && !isExternal(cur.src) && !data(cur.src).dataURL) {
-                            if (!this.options.usePrerenderedImages) {
-                                desatIMG(cur, true);
-                            }
-                            else {
-                                var bwUrl = ToBWUrl(cur.src, this.options.prerenderSuffix);
-                                $.ajax({
-                                    async: false,
-                                    url: bwUrl,
-                                    contentType: 'application/x-www-form-urlencoded',
-                                    dataType: 'html',
-                                    type: 'HEAD',
-                                    error: function() {
-                                        desatIMG(cur, true);
-                                    },
-                                    success: function() {
-                                        data(cur.src).dataURL = bwUrl;
-                                    },
-                                    dataFilter: null
-                                });
-                            }
-                        }
-
-                    } else {
-                        var style = getStyle(cur, 'backgroundImage');
-                        if (style.indexOf('url(') > -1) {
-                            var urlPatt = /\(['"]?(.+?)['"]?\)/,
-                        url = style.match(urlPatt)[1];
-                            if (!isExternal(url) && !data(url).dataURL) {
-                                if (!this.options.usePrerenderedImages) {
-                                    var temp = document.createElement('img');
-                                    temp.src = url;
-                                    desatIMG(temp, true, cur);
-                                }
-                                else {
-                                    var bwUrl = ToBWUrl(url, this.options.prerenderSuffix);
-                                    $.ajax({
-                                        async: false,
-                                        url: bwUrl,
-                                        contentType: 'application/x-www-form-urlencoded',
-                                        dataType: 'html',
-                                        type: 'HEAD',
-                                        error: function() {
-                                            var temp = document.createElement('img');
-                                            temp.src = url;
-                                            desatIMG(temp, true, cur);
-                                        },
-                                        success: function() {
-                                            data(url).dataURL = bwUrl;
-                                        },
-                                        dataFilter: null
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            init.options = {
-                usePrerenderedImages: false,
-                prerenderSuffix: '_bw'
             };
             return init;
 
