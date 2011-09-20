@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.5
+Version: 0.0.6
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -28,17 +28,19 @@ Version: 0.0.5
             eventTypes: ['blur', 'focus', 'focusin', 'focusout', 'load', 'resize', 'scroll', 'unload', 'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave', 'change', 'select', 'submit', 'keydown', 'keypress', 'keyup', 'error'],
             grayout: false,
             eventBlockSelector: '*', //defines the element(s) to block the eventTypes on
-            disableSelector: ":input, select, a" //defines the element(s) to disable
+            disableSelector: ":input, select, a", //defines the element(s) to disable
+            //we use the span as the first filter criteria as asp.net validators render as spans, we need to check in Page_Validators            
+            aspnetValidatorSelector: "span"
         },
         reset: function(options) {
             var options = $.extend({}, $.fn.readonly.defaults, options);
             return this.each(function() {
-                var $el = $(this);
-                if ($el.hasClass('readonly') == true) {
+                var $elmain = $(this);
+                if ($elmain.hasClass('readonly') == true) {
                     //unmark the main object
-                    $el.removeClass('readonly');
-                    $el.find(options.eventBlockSelector).andSelf().unbind(options.eventTypes.toString().replace(new RegExp(',', 'g'), ' '), $.fn.readonly._eventBlocker);
-                    $el.find(options.disableSelector).andSelf().each(function() {
+                    $elmain.removeClass('readonly');
+                    $elmain.find(options.eventBlockSelector).andSelf().unbind(options.eventTypes.toString().replace(new RegExp(',', 'g'), ' '), $.fn.readonly._eventBlocker);
+                    $elmain.find(options.disableSelector).andSelf().each(function() {
                         var $el = $(this);
                         $el.prop('disabled', false);
                         var href = $el.prop('hrefbak');
@@ -46,6 +48,15 @@ Version: 0.0.5
                             $el.removeProp('hrefbak').prop('href', href);
                         }
                     });
+                    if (typeof (Page_Validators) != 'undefined') { //asp.net validators
+                        var excludedValidators = $elmain.data("readonly")["excludedValidators"];
+                        excludedValidators.each(function() {
+                            this.enable = true;
+                            if ($.inArray(this, Page_Validators) == -1)
+                                Page_Validators.push(this);
+                        });
+                        $elmain.removeData("readonly");
+                    }
                     if (options.grayout) {
                         $.fn.readonly.grayscale.reset(this);
                     }
@@ -100,6 +111,20 @@ Version: 0.0.5
                             }
                         }
                     });
+                    if (typeof (Page_Validators) != 'undefined') { //asp.net validators
+                        var excludedValidators = [];
+                        $elmain.find(options.aspnetValidatorSelector).andSelf().each(function() {
+                            var valIndex = $.inArray(this, Page_Validators);
+                            if (valIndex != -1) {
+                                this.enable = false;
+                                this.isvalid = true;
+                                ValidatorUpdateDisplay(this);
+                                excludedValidators.push(this);
+                                Page_Validators.splice(valIndex, 1);
+                            }
+                        });
+                        $elmain.data("readonly", { "excludedValidators": excludedValidators });
+                    }
                     if (options.grayout) {
                         $.fn.readonly.grayscale(this);
                     }
