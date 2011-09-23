@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.7
+Version: 0.0.8
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -43,6 +43,7 @@ Version: 0.0.7
                     $elmain.find(options.disableSelector).andSelf().each(function() {
                         var $el = $(this);
                         $el.prop('disabled', false);
+                        $el.removeAttr('disabled');
                         var href = $el.prop('hrefbak');
                         if (href) {
                             $el.removeProp('hrefbak').prop('href', href);
@@ -50,6 +51,7 @@ Version: 0.0.7
                     });
                     if (typeof (Page_Validators) != 'undefined') { //asp.net validators
                         var excludedValidators = $elmain.data("readonly")["excludedValidators"];
+
                         $.each(excludedValidators, function() {
                             this.enable = true;
                             if ($.inArray(this, Page_Validators) == -1)
@@ -75,6 +77,7 @@ Version: 0.0.7
                     $elmain.find(options.disableSelector).andSelf().each(function() {
                         var $el = $(this);
                         $el.prop('disabled', true);
+                        $el.attr('disabled', 'disabled'); //target with css ex. a[disabled]
                         var hrefbak = $el.prop('href');
                         if (hrefbak) {
                             $el.prop('href', '').prop('hrefbak', hrefbak).removeAttr('href');
