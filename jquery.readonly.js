@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.6
+Version: 0.0.7
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -50,7 +50,7 @@ Version: 0.0.6
                     });
                     if (typeof (Page_Validators) != 'undefined') { //asp.net validators
                         var excludedValidators = $elmain.data("readonly")["excludedValidators"];
-                        excludedValidators.each(function() {
+                        $.each(excludedValidators, function() {
                             this.enable = true;
                             if ($.inArray(this, Page_Validators) == -1)
                                 Page_Validators.push(this);
