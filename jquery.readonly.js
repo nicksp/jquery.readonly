@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.8
+Version: 0.0.9
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -106,11 +106,13 @@ Version: 0.0.8
                                 //!! the bound handlers are executed in the order they where bound
                                 //reorder the events
                                 var handlers = events[eventType];
-                                var ourHandler = handlers[handlers.length - 1];
-                                for (i = handlers.length - 1; i > 0; i--) {
-                                    handlers[i] = handlers[i - 1];
-                                }
-                                handlers[0] = ourHandler;
+                                if (handlers) {
+                                    var ourHandler = handlers[handlers.length - 1];
+                                    for (i = handlers.length - 1; i > 0; i--) {
+                                        handlers[i] = handlers[i - 1];
+                                    }
+                                    handlers[0] = ourHandler;
+                                } 
                             }
                         }
                     });
