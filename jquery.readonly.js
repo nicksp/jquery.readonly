@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.0.9
+Version: 0.1.0
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -53,9 +53,10 @@ Version: 0.0.9
                         var excludedValidators = $elmain.data("readonly")["excludedValidators"];
 
                         $.each(excludedValidators, function() {
-                            this.enable = true;
-                            if ($.inArray(this, Page_Validators) == -1)
+                            if ($.inArray(this, Page_Validators) == -1) {
                                 Page_Validators.push(this);
+                                ValidatorHookupControlID(this.controltovalidate, this);
+                            }
                         });
                         $elmain.removeData("readonly");
                     }
@@ -112,20 +113,24 @@ Version: 0.0.9
                                         handlers[i] = handlers[i - 1];
                                     }
                                     handlers[0] = ourHandler;
-                                } 
+                                }
                             }
                         }
                     });
                     if (typeof (Page_Validators) != 'undefined') { //asp.net validators
                         var excludedValidators = [];
-                        $elmain.find(options.aspnetValidatorSelector).andSelf().each(function() {
-                            var valIndex = $.inArray(this, Page_Validators);
-                            if (valIndex != -1) {
-                                this.enable = false;
-                                this.isvalid = true;
-                                ValidatorUpdateDisplay(this);
-                                excludedValidators.push(this);
-                                Page_Validators.splice(valIndex, 1);
+                        $elmain.each(function() {
+                            if (this.Validators != undefined) {
+                                $.each(this.Validators, function(index, validator) {
+                                    var valIndex = $.inArray(validator, Page_Validators);
+                                    if (valIndex != -1) {
+                                        validator.isvalid = true;
+                                        ValidatorUpdateDisplay(validator);
+                                        excludedValidators.push(validator);
+                                        Page_Validators.splice(valIndex, 1);
+                                    }
+                                });
+                                $(this).unbind(".aspnetvalidators");
                             }
                         });
                         $elmain.data("readonly", { "excludedValidators": excludedValidators });
@@ -410,4 +415,19 @@ Version: 0.0.9
 
         })()
     });
+
+    // Microsoft Asp.net Validation Customizations
+    function ValidatorHookupEvent(control, eventType, functionPrefix) {
+        ktrace(control.id + ' HookupEvent ' + eventType);
+        var func, evntType = eventType.slice(2, eventType.length);
+        if (navigator.appName.toLowerCase().indexOf('explorer') > -1) {
+            func = new Function(functionPrefix);
+        }
+        else {
+            func = new Function("event", functionPrefix);
+        }
+        $(control).bind(evntType + ".aspnetvalidators", func);
+    }
+    // Microsoft Asp.net Validation Customizations
 })(jQuery);
+
