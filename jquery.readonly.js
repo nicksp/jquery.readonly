@@ -28,9 +28,7 @@ Version: 0.1.0
             eventTypes: ['blur', 'focus', 'focusin', 'focusout', 'load', 'resize', 'scroll', 'unload', 'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave', 'change', 'select', 'submit', 'keydown', 'keypress', 'keyup', 'error'],
             grayout: false,
             eventBlockSelector: '*', //defines the element(s) to block the eventTypes on
-            disableSelector: ":input, select, a", //defines the element(s) to disable
-            //we use the span as the first filter criteria as asp.net validators render as spans, we need to check in Page_Validators            
-            aspnetValidatorSelector: "span"
+            disableSelector: ":input, select, a" //defines the element(s) to disable
         },
         reset: function(options) {
             var options = $.extend({}, $.fn.readonly.defaults, options);
