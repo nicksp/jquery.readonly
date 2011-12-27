@@ -416,7 +416,6 @@ Version: 0.1.0
 
     // Microsoft Asp.net Validation Customizations
     function ValidatorHookupEvent(control, eventType, functionPrefix) {
-        ktrace(control.id + ' HookupEvent ' + eventType);
         var func, evntType = eventType.slice(2, eventType.length);
         if (navigator.appName.toLowerCase().indexOf('explorer') > -1) {
             func = new Function(functionPrefix);
