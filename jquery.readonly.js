@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.0
+Version: 0.1.1
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -67,13 +67,35 @@ Version: 0.1.0
         _readonly: function(options) {
             var options = $.extend({}, $.fn.readonly.defaults, options);
 
+            function DisableAspNetValidator(elem, excludedValidators) {
+                if (elem.Validators != undefined) {
+                    $.each(elem.Validators, function(index, validator) {
+                        if (validator.id != options.ExcludeValidatorId) {
+                            var valIndex = $.inArray(validator, Page_Validators);
+                            if (valIndex != -1) {
+                                validator.isvalid = true;
+                                ValidatorUpdateDisplay(validator);
+                                excludedValidators.push(validator);
+                                Page_Validators.splice(valIndex, 1);
+                            }
+                        }
+                    });
+                    $(elem).unbind(".aspnetvalidators");
+                }
+            }
+
             return this.each(function() {
                 var $elmain = $(this);
                 if ($elmain.hasClass('readonly') == false) {
                     //mark the main object
                     $elmain.addClass('readonly');
 
-                    $elmain.find(options.disableSelector).andSelf().each(function() {
+                    var excludedValidators = [], disableSelection = $elmain.find(options.disableSelector);
+
+                    if ($elmain.is(options.disableSelector))
+                        disableSelection = disableSelection.andSelf();
+
+                    disableSelection.each(function() {
                         var $el = $(this);
                         $el.prop('disabled', true);
                         $el.attr('disabled', 'disabled'); //target with css ex. a[disabled]
@@ -81,7 +103,9 @@ Version: 0.1.0
                         if (hrefbak) {
                             $el.prop('href', '').prop('hrefbak', hrefbak).removeAttr('href');
                         }
+                        DisableAspNetValidator(this, excludedValidators);
                     });
+                    $elmain.data("readonly", { "excludedValidators": excludedValidators });
 
                     $elmain.find(options.eventBlockSelector).andSelf().each(function() {
                         var $el = $(this);
@@ -115,24 +139,6 @@ Version: 0.1.0
                             }
                         }
                     });
-                    if (typeof (Page_Validators) != 'undefined') { //asp.net validators
-                        var excludedValidators = [];
-                        $elmain.each(function() {
-                            if (this.Validators != undefined) {
-                                $.each(this.Validators, function(index, validator) {
-                                    var valIndex = $.inArray(validator, Page_Validators);
-                                    if (valIndex != -1) {
-                                        validator.isvalid = true;
-                                        ValidatorUpdateDisplay(validator);
-                                        excludedValidators.push(validator);
-                                        Page_Validators.splice(valIndex, 1);
-                                    }
-                                });
-                                $(this).unbind(".aspnetvalidators");
-                            }
-                        });
-                        $elmain.data("readonly", { "excludedValidators": excludedValidators });
-                    }
                     if (options.grayout) {
                         $.fn.readonly.grayscale(this);
                     }
