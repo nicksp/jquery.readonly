@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.1
+Version: 0.1.2
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -28,7 +28,8 @@ Version: 0.1.1
             eventTypes: ['blur', 'focus', 'focusin', 'focusout', 'load', 'resize', 'scroll', 'unload', 'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave', 'change', 'select', 'submit', 'keydown', 'keypress', 'keyup', 'error'],
             grayout: false,
             eventBlockSelector: '*', //defines the element(s) to block the eventTypes on
-            disableSelector: ":input, select, a" //defines the element(s) to disable
+            disableSelector: ":input, select, a", //defines the element(s) to disable
+            excludeValidatorIds: [] //validators to keep untouched by readonly
         },
         reset: function(options) {
             var options = $.extend({}, $.fn.readonly.defaults, options);
@@ -70,7 +71,7 @@ Version: 0.1.1
             function DisableAspNetValidator(elem, excludedValidators) {
                 if (elem.Validators != undefined) {
                     $.each(elem.Validators, function(index, validator) {
-                        if (validator.id != options.ExcludeValidatorId) {
+                        if ($.inArray(validator.id, options.excludeValidatorIds) == -1) {
                             var valIndex = $.inArray(validator, Page_Validators);
                             if (valIndex != -1) {
                                 validator.isvalid = true;
