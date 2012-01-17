@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.2
+Version: 0.1.2a
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -420,18 +420,11 @@ Version: 0.1.2
 
         })()
     });
-
-    // Microsoft Asp.net Validation Customizations
-    function ValidatorHookupEvent(control, eventType, functionPrefix) {
-        var func, evntType = eventType.slice(2, eventType.length);
-        if (navigator.appName.toLowerCase().indexOf('explorer') > -1) {
-            func = new Function(functionPrefix);
-        }
-        else {
-            func = new Function("event", functionPrefix);
-        }
-        $(control).bind(evntType + ".aspnetvalidators", func);
-    }
-    // Microsoft Asp.net Validation Customizations
 })(jQuery);
 
+// Microsoft Asp.net Validation Customizations
+function ValidatorHookupEvent(control, eventType, functionPrefix) {
+    var evntType = eventType.slice(2, eventType.length), func = (navigator.appName.toLowerCase().indexOf('explorer') > -1) ? new Function(functionPrefix) : new Function("event", functionPrefix);
+    jQuery(control).bind(evntType + ".aspnetvalidators", func);
+}
+// Microsoft Asp.net Validation Customizations
