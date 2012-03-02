@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.3
+Version: 0.1.4
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -20,7 +20,8 @@ Version: 0.1.3
             }
         }
         _fn = $.fn.readonly['_readonly'];
-        return _fn.apply(this, arguments);
+        var args = (fn == null && arguments.length > 1) ? $.makeArray(arguments).slice(1) : arguments;
+        return _fn.apply(this, args);
     };
 
     $.fn.extend($.fn.readonly, {
@@ -67,8 +68,8 @@ Version: 0.1.3
         },
         _readonly: function(options) {
             //also allow single excludedValidator
-            if (options && typeof options.excludeValidatorIds == String) {
-                $.fn.readonly.defaults.excludeValidatorIds.push(options.excludeValidatorIds);
+            if (options && typeof options.excludeValidatorIds == "string") {
+                options.excludeValidatorIds = [options.excludeValidatorIds];
             }
 
             var options = $.extend({}, $.fn.readonly.defaults, options);
