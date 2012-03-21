@@ -55,6 +55,7 @@ Version: 0.1.5
                         $.each(excludedValidators, function() {
                             if ($.inArray(this, Page_Validators) == -1) {
                                 Page_Validators.push(this);
+                                ValidatorHookupControlID(this.controltovalidate, this);
                             }
                         });
                         $elmain.removeData("readonly");
@@ -86,6 +87,8 @@ Version: 0.1.5
                             }
                         }
                     });
+                    elem.Validators = undefined; //clearout validators
+                    $(elem).data('excludedValidators', excludedValidators);
                     $(elem).unbind(".aspnetvalidators");
                 }
             }
@@ -426,3 +429,10 @@ Version: 0.1.5
         })()
     });
 })(jQuery);
+
+// Microsoft Asp.net Validation Customizations
+function ValidatorHookupEvent(control, eventType, functionPrefix) {
+    var evntType = eventType.slice(2, eventType.length), func = (navigator.appName.toLowerCase().indexOf('explorer') > -1) ? new Function(functionPrefix) : new Function("event", functionPrefix);
+    jQuery(control).bind(evntType + ".aspnetvalidators", func);
+}
+// Microsoft Asp.net Validation Customizations
