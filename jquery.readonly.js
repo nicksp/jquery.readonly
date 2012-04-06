@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.5
+Version: 0.1.6
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -30,15 +30,16 @@ Version: 0.1.5
             grayout: false,
             eventBlockSelector: '*', //defines the element(s) to block the eventTypes on
             disableSelector: ":input, select, a", //defines the element(s) to disable
-            excludeValidatorIds: [] //validators to keep untouched by readonly
+            excludeValidatorIds: [], //validators to keep untouched by readonly
+            readonlyClass: "readonly"
         },
         reset: function(options) {
             var options = $.extend({}, $.fn.readonly.defaults, options);
             return this.each(function() {
                 var $elmain = $(this);
-                if ($elmain.hasClass('readonly') == true) {
+                if ($elmain.hasClass(options.readonlyClass) == true) {
                     //unmark the main object
-                    $elmain.removeClass('readonly');
+                    $elmain.removeClass(options.readonlyClass);
                     $elmain.find(options.eventBlockSelector).andSelf().unbind(options.eventTypes.toString().replace(new RegExp(',', 'g'), ' '), $.fn.readonly._eventBlocker);
                     $elmain.find(options.disableSelector).andSelf().each(function() {
                         var $el = $(this);
@@ -95,9 +96,9 @@ Version: 0.1.5
 
             return this.each(function() {
                 var $elmain = $(this);
-                if ($elmain.hasClass('readonly') == false) {
+                if ($elmain.hasClass(options.readonlyClass) == false) {
                     //mark the main object
-                    $elmain.addClass('readonly');
+                    $elmain.addClass(options.readonlyClass);
 
                     var excludedValidators = [], disableSelection = $elmain.find(options.disableSelector);
 
