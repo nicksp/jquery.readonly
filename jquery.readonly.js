@@ -79,7 +79,7 @@ Version: 0.1.7
                 if (elem.Validators != undefined) {
                     $.each(elem.Validators, function(index, validator) {
                         if ($.inArray(validator.id, options.excludeValidatorIds) == -1) {
-                            var valIndex = Page_Validators.indexOf(validator);
+                            var valIndex = $.inArray(validator, Page_Validators);
                             if (valIndex != -1) {
                                 validator.isvalid = true;
                                 ValidatorUpdateDisplay(validator);
@@ -89,7 +89,7 @@ Version: 0.1.7
                         }
                     });
                     $.each(excludedValidators, function(index, validator) {
-                        var vi = Page_Validators.indexOf(validator);
+                        var vi = $.inArray(validator, Page_Validators);
                         elem.Validators.splice(vi, 1);
                     });
                     $(elem).data('excludedValidators', excludedValidators);
