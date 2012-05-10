@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.7
+Version: 0.1.8
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -56,7 +56,8 @@ Version: 0.1.7
                         $.each(excludedValidators, function() {
                             if ($.inArray(this, Page_Validators) == -1) {
                                 Page_Validators.push(this);
-                                ValidatorHookupControlID(this.controltovalidate, this);
+                                var ctrl = document.getElementById(this.controltovalidate);
+                                if (ctrl) ctrl.Validators.push(this);
                             }
                         });
                         $elmain.removeData("readonly");
@@ -89,11 +90,10 @@ Version: 0.1.7
                         }
                     });
                     $.each(excludedValidators, function(index, validator) {
-                        var vi = $.inArray(validator, Page_Validators);
+                        var vi = $.inArray(validator, elem.Validators);
                         elem.Validators.splice(vi, 1);
                     });
                     $(elem).data('excludedValidators', excludedValidators);
-                    $(elem).unbind(".aspnetvalidators");
                 }
             }
 
@@ -433,10 +433,3 @@ Version: 0.1.7
         })()
     });
 })(jQuery);
-
-// Microsoft Asp.net Validation Customizations
-function ValidatorHookupEvent(control, eventType, functionPrefix) {
-    var evntType = eventType.slice(2, eventType.length), func = (navigator.appName.toLowerCase().indexOf('explorer') > -1) ? new Function(functionPrefix) : new Function("event", functionPrefix);
-    jQuery(control).bind(evntType + ".aspnetvalidators", func);
-}
-// Microsoft Asp.net Validation Customizations
