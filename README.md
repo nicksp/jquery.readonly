@@ -12,3 +12,8 @@ This is convenient for setting input forms or certain parts of the inputform in 
 
 $(selector).readonly();  //set readonly
 $(selector).readonly('reset'); //set normal, undo readonly
+
+## Compiling with Google Closure Compiler
+
+First grab the sources from github.  In the root you type ant.
+A new folder dist is created with the minified and optimized js-files
