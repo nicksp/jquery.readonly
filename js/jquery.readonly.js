@@ -3,7 +3,7 @@ Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
 Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
-Version: 0.1.8
+Version: 0.1.9
 
 -- grayscale function -- Copyright (C) James Padolsey (http://james.padolsey.com)
 */
@@ -34,6 +34,15 @@ Version: 0.1.8
             readonlyClass: "readonly"
         },
         reset: function(options) {
+            function hookupValidator(control, validator) {
+                if (control.tagName != "INPUT" && control.tagName != "TEXTAREA" && control.tagName != "SELECT" && control.tagName != "TD") {
+                    for (var i = 0; i < control.childNodes.length; i++) {
+                        hookupValidator(control.childNodes[i], validator);
+                    }
+                } else {
+                    control.Validators.push(validator);
+                }
+            }
             var options = $.extend({}, $.fn.readonly.defaults, options);
             return this.each(function() {
                 var $elmain = $(this);
@@ -57,7 +66,9 @@ Version: 0.1.8
                             if ($.inArray(this, Page_Validators) == -1) {
                                 Page_Validators.push(this);
                                 var ctrl = document.getElementById(this.controltovalidate);
-                                if (ctrl) ctrl.Validators.push(this);
+                                if (ctrl) {
+                                    hookupValidator(ctrl, this);
+                                }
                             }
                         });
                         $elmain.removeData("readonly");
@@ -69,6 +80,16 @@ Version: 0.1.8
             });
         },
         _readonly: function(options) {
+            function hookoffValidator(control, validator) {
+                if (control.tagName != "INPUT" && control.tagName != "TEXTAREA" && control.tagName != "SELECT" && control.tagName != "TD") {
+                    for (var i = 0; i < control.childNodes.length; i++) {
+                        hookoffValidator(control.childNodes[i], validator);
+                    }
+                } else {
+                    var vi = $.inArray(validator, control.Validators);
+                    control.Validators.splice(vi, 1);
+                }
+            }
             //also allow single excludedValidator
             if (options && typeof options.excludeValidatorIds == "string") {
                 options.excludeValidatorIds = [options.excludeValidatorIds];
@@ -90,8 +111,7 @@ Version: 0.1.8
                         }
                     });
                     $.each(excludedValidators, function(index, validator) {
-                        var vi = $.inArray(validator, elem.Validators);
-                        elem.Validators.splice(vi, 1);
+                        hookoffValidator(elem, validator);
                     });
                     $(elem).data('excludedValidators', excludedValidators);
                 }
