@@ -1,4 +1,4 @@
-/*
+/**@preserve
 Readonly plugin for jquery
 http://github.com/RobinHerbots/jquery.readonly
 Copyright (c) 2011 Robin Herbots
